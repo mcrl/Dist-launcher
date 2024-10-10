@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Set master address and port
-MASTER_ADDR=v00       # Bind to all interfaces
+MASTER_ADDR=v00       # Choose a master address
 MASTER_PORT=12345     # Choose an available port number
 
 NNODES=2              # Number of nodes
