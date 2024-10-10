@@ -1,6 +1,6 @@
 # Distributed Launcher
 
-Distributed launcher uisng Python socket module.
+Distributed launcher using Python socket module.
 
 ## Setup
 
