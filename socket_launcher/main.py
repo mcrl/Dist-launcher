@@ -104,17 +104,16 @@ def main():
     os.environ['RANK'] = str(rank)
     os.environ['WORLD_SIZE'] = str(world_size)
 
-    # Execute the task script
-    # Pass along any additional arguments received
+    # Execute the task script using subprocess
     task_command = [sys.executable, args.task] + unknown
     print(f"[Rank {rank}] Executing task: {' '.join(task_command)}")
 
-    # Flush the output buffers before execv
+    # Flush the output buffers before running subprocess
     sys.stdout.flush()
     sys.stderr.flush()
 
-    # Replace the current process with the task script
-    os.execv(sys.executable, task_command)
+    # Run the task script as a subprocess
+    result = subprocess.run(task_command, env=os.environ)
 
 if __name__ == '__main__':
     main()
