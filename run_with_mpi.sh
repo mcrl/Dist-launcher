@@ -26,7 +26,7 @@ LOCAL_RANK=$(( GLOBAL_RANK % NPERNODES ))
 
 echo ">> NODE: $(hostname), GLOBAL_RANK: $GLOBAL_RANK, GLOBAL_SIZE: $GLOBAL_SIZE, NODE_RANK: $NODE_RANK, LOCAL_RANK: $LOCAL_RANK"
 
-python -u main.py \
+python -m snuqs.launcher \
     --task example_task.py \
     --master_addr=$MASTER_ADDR \
     --master_port=$MASTER_PORT \

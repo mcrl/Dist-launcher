@@ -8,7 +8,7 @@ NNODES=2              # Number of nodes
 NPERNODES=2           # Number of processes per node
 NODE_RANK=$1          # Rank of the current node
 
-python -u main.py \
+python -m snuqs.launcher \
     --task example_task.py \
     --nproc_per_node=$NPERNODES \
     --master_addr=$MASTER_ADDR \
