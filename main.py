@@ -18,12 +18,12 @@ def wait_for_worker_completion(conn, worker_rank, completion_event):
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument('--master_addr', type=str, required=True, help='Address of the master node (hostname or IP)')
-    parser.add_argument('--master_port', type=int, required=True, help='Port for the master server to bind')
-    parser.add_argument('--nnodes', type=int, required=True, help='Number of nodes')
+    parser.add_argument('--master_addr', type=str, default='localhost', help='Address of the master node (hostname or IP)')
+    parser.add_argument('--master_port', type=int, default=12345, help='Port for the master server to bind')
+    parser.add_argument('--nnodes', type=int, default=1, help='Number of nodes')
     parser.add_argument('--nproc_per_node', type=int, required=True, help='Number of processes per node')
-    parser.add_argument('--node_rank', type=int, required=True, help='Rank of the node (0 to nnodes-1)')
-    parser.add_argument('--local_rank', type=int, required=True, help='Rank of the process on the node (0 to nproc_per_node-1)')
+    parser.add_argument('--node_rank', type=int, default=0, help='Rank of the node (0 to nnodes-1)')
+    parser.add_argument('--local_rank', type=int, default=None, help='Rank of the process on the node (0 to nproc_per_node-1)')
     parser.add_argument('--task', type=str, required=True, help='Path to the task script (e.g., example_task.py)')
     args, unknown = parser.parse_known_args()
 
@@ -34,6 +34,17 @@ def main():
     nproc_per_node = args.nproc_per_node
     node_rank = args.node_rank
     local_rank = args.local_rank
+
+    # If local_rank is not provided, spawn multiple processes on each node
+    if local_rank is None:
+        processes = []
+        for local_rank in range(nproc_per_node):
+            cmd = [sys.executable, sys.argv[0]] + sys.argv[1:] + ['--local_rank', str(local_rank)]
+            p = subprocess.Popen(cmd)
+            processes.append(p)
+        for p in processes:
+            p.wait()
+        sys.exit(0)
 
     # Calculate the global rank and world size
     rank = node_rank * nproc_per_node + local_rank
@@ -87,6 +98,7 @@ def main():
         # Execute the task script
         os.environ['RANK'] = str(rank)
         os.environ['WORLD_SIZE'] = str(world_size)
+        os.environ['LOCAL_RANK'] = str(local_rank)
         task_command = [sys.executable, args.task] + unknown
         print(f"[Rank {rank}] Executing task: {' '.join(task_command)}")
         sys.stdout.flush()
