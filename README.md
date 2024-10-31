@@ -26,10 +26,10 @@ To launch on multi-nodes:
 
 ```bash
 # On the master node (e.g., v00)
-python main.py --task example_task.py --nnodes=2 --nproc_per_node=2 --node-rank=0 --master_addr=<master_IP>
+python main.py --task example_task.py --nnodes=2 --nproc_per_node=2 --node_rank=0 --master_addr=<master_IP>
 
 # On the worker node (e.g., v01)
-python main.py --task example_task.py --nnodes=2 --nproc_per_node=2 --node-rank=1 --master_addr=<master_IP>
+python main.py --task example_task.py --nnodes=2 --nproc_per_node=2 --node_rank=1 --master_addr=<master_IP>
 ```
 Also available to use scripts as follows:
 ```bash

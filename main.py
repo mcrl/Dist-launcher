@@ -22,7 +22,7 @@ def main():
     parser.add_argument('--master_port', type=int, default=12345, help='Port for the master server to bind')
     parser.add_argument('--nnodes', type=int, default=1, help='Number of nodes')
     parser.add_argument('--nproc_per_node', type=int, required=True, help='Number of processes per node')
-    parser.add_argument('--node_rank', type=int, default=0, help='Rank of the node (0 to nnodes-1)')
+    parser.add_argument('--node_rank', type=int, default=None, help='Rank of the node (0 to nnodes-1)')
     parser.add_argument('--local_rank', type=int, default=None, help='Rank of the process on the node (0 to nproc_per_node-1)')
     parser.add_argument('--task', type=str, required=True, help='Path to the task script (e.g., example_task.py)')
     args, unknown = parser.parse_known_args()
@@ -34,6 +34,24 @@ def main():
     nproc_per_node = args.nproc_per_node
     node_rank = args.node_rank
     local_rank = args.local_rank
+
+    # Arguments validation checks
+    assert nnodes >= 1, "Error: --nnodes must be a positive integer (>= 1)."
+
+    assert nproc_per_node >= 1, "Error: --nproc_per_node must be a positive integer (>= 1)."
+
+    if nnodes > 1 and node_rank is None:
+        print("Error: --node_rank must be specified when nnodes > 1")
+        sys.exit(1)
+    elif node_rank is None:
+        node_rank = 0
+    
+    assert 0 <= node_rank < nnodes, f"Error: --node_rank must be between 0 and nnodes - 1 (0 <= node_rank < {nnodes})."
+    
+    if local_rank is not None:
+        assert 0 <= local_rank < nproc_per_node, f"Error: --local_rank must be between 0 and nproc_per_node - 1 (0 <= local_rank < {nproc_per_node})."
+
+    assert 0 < master_port < 65536, "Error: --master_port must be an integer between 1 and 65535."
 
     # If local_rank is not provided, spawn multiple processes on each node
     if local_rank is None:
@@ -95,10 +113,14 @@ def main():
             t.start()
             completion_events.append(completion_event)
 
-        # Execute the task script
+        # Set environment variables for the task script
         os.environ['RANK'] = str(rank)
         os.environ['WORLD_SIZE'] = str(world_size)
         os.environ['LOCAL_RANK'] = str(local_rank)
+        os.environ['MASTER_ADDR'] = master_addr
+        os.environ['MASTER_PORT'] = str(master_port)
+
+        # Execute the task script
         task_command = [sys.executable, args.task] + unknown
         print(f"[Rank {rank}] Executing task: {' '.join(task_command)}")
         sys.stdout.flush()
@@ -137,6 +159,9 @@ def main():
         # Set environment variables for the task script
         os.environ['RANK'] = str(rank)
         os.environ['WORLD_SIZE'] = str(world_size)
+        os.environ['LOCAL_RANK'] = str(local_rank)
+        os.environ['MASTER_ADDR'] = master_addr
+        os.environ['MASTER_PORT'] = str(master_port)
 
         # Execute the task script
         task_command = [sys.executable, args.task] + unknown
